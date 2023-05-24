@@ -1,0 +1,43 @@
+FROM --platform=amd64 ubuntu:latest
+
+RUN apt update && \
+    apt install -y curl && \
+    apt install -y tar && \
+    apt install -y xz-utils && \
+    apt install -y libgmp10 && \
+    apt install -y libgmp3-dev && \
+    apt install -y libgmp-dev
+
+ENV PATH="/root/.local/bin:${PATH}"
+
+# WORKDIR /home/lbgmp
+
+# COPY deploy/lbgmp.sh .
+
+# RUN touch .bash_profile && /home/lbgmp/lbgmp.sh 
+
+RUN addgroup --system nixbld && \
+    adduser --home /home/nix --disabled-password --gecos "" --shell /bin/bash nix && \
+    adduser nix nixbld && \
+    mkdir -m 0755 /nix && chown nix /nix && \
+    mkdir -p /etc/nix && echo 'sandbox = false' > /etc/nix/nix.conf
+
+CMD /bin/bash -l
+USER nix
+ENV USER nix
+WORKDIR /home/nix
+
+COPY --chown=nix:nix . .
+
+RUN touch .bash_profile && deploy/nix.sh 
+
+ENV PATH="/home/nix/bin:${PATH}"
+
+# RUN git clone https://github.com/ImageMagick/ImageMagick.git && \
+#     cd ImageMagick && git checkout 7.0.10-3 && \
+#     ./configure --prefix=/home/nix && make && make install
+
+RUN . /home/nix/.nix-profile/etc/profile.d/nix.sh && \
+       stack install --fast -j12 --test
+
+ENTRYPOINT ["/home/nix/deploy/init.sh"]
