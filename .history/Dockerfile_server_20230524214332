@@ -38,6 +38,6 @@ ENV PATH="/home/nix/bin:${PATH}"
 #     ./configure --prefix=/home/nix && make && make install
 
 RUN . /home/nix/.nix-profile/etc/profile.d/nix.sh && \
-       nix-shell --run "stack install --fast -j12 --test"
+       stack install --fast -j12 --test
 
 ENTRYPOINT ["/home/nix/deploy/init.sh"]
